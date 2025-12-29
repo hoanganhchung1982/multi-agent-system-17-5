@@ -1,35 +1,31 @@
 // File: api/gemini.ts
-// Backend này đã được tối giản hóa: KHÔNG CẦN API KEY, KHÔNG LỖI 405
-export const config = {
-  runtime: 'edge', 
-};
+export const config = { runtime: 'edge' };
 
 export default async function handler(req: Request) {
-  // 1. Chấp nhận yêu cầu POST từ Frontend
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: "Chỉ chấp nhận lệnh POST" }), { status: 405 });
-  }
+  if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
-  // 2. Giả lập dữ liệu trả về (Bạn không cần sửa gì ở đây)
-  const mockResponse = {
-    speed: {
-      answer: "Để giải bài toán này, ta áp dụng công thức: $A = \pi \cdot r^2$. Kết quả cuối cùng là 25.12.",
-      similar: {
-        question: "Câu hỏi tương tự: Tính chu vi hình chữ nhật có cạnh 3 và 4?",
-        options: ["7", "12", "14", "10"],
-        correctIndex: 2
-      }
+  // Dữ liệu giả lập cho từng Agent và chức năng
+  const mockData = {
+    // Kết quả cho SPEED Agent (dạng JSON như App.tsx yêu cầu)
+    speedAnswer: JSON.stringify({
+      finalAnswer: "Kết quả bài toán là $x = 5$. Ta có phương trình: $2x + 10 = 20 \\Rightarrow 2x = 10 \\Rightarrow x = 5$.",
+      casioSteps: "Bấm: [MENU] [9] [1] [2]\nNhập: 2 [=] 10 [=] 20 [=]\nKết quả hiện x = 5."
+    }),
+    // Kết quả cho các Agent khác
+    socraticHint: "Mấu chốt nằm ở việc bạn cần chuyển vế và đổi dấu các hạng tử tự do trước.",
+    perplexityPractice: "Bài tập tương tự: Giải phương trình $3x - 15 = 0$.",
+    // Dữ liệu cho Quiz
+    quiz: {
+      question: "Giải phương trình $x^2 - 9 = 0$?",
+      options: ["x = 3", "x = -3", "x = 3 hoặc x = -3", "Vô nghiệm"],
+      answer: "C"
     },
-    socratic_hint: "Gợi ý: Hãy kiểm tra kỹ đơn vị đo lường trước khi tính toán nhé!",
-    core_concept: "Hình học và Đại số cơ bản"
+    // Tóm tắt cho Loa
+    summary: "Nghiệm của phương trình là giá trị làm cho hai vế bằng nhau."
   };
 
-  // 3. Trả về kết quả cho Frontend ngay lập tức
-  return new Response(JSON.stringify(mockResponse), {
+  return new Response(JSON.stringify(mockData), {
     status: 200,
-    headers: { 
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*' // Cho phép mọi nguồn truy cập để tránh lỗi CORS
-    }
+    headers: { 'Content-Type': 'application/json' }
   });
 }
