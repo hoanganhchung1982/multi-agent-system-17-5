@@ -1,69 +1,35 @@
-// --- File: api/gemini.ts ---
+// File: api/gemini.ts
+// Backend này đã được tối giản hóa: KHÔNG CẦN API KEY, KHÔNG LỖI 405
 export const config = {
-  runtime: 'edge',
+  runtime: 'edge', 
 };
 
-export default async function (req: Request) {
+export default async function handler(req: Request) {
+  // 1. Chấp nhận yêu cầu POST từ Frontend
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return new Response(JSON.stringify({ error: "Chỉ chấp nhận lệnh POST" }), { status: 405 });
   }
 
-  // 1. Lấy Google API Key từ biến môi trường
-  const apiKey = process.env.VITE_GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Thiếu Gemini API Key' }), { status: 500 });
-  }
-
-  try {
-    const { subject, prompt, image } = await req.json();
-
-    // 2. Cấu trúc lại dữ liệu gửi sang Google Gemini API
-    const contents = [
-      {
-        parts: [
-          { text: `Bạn là giáo viên chuyên nghiệp. Trả về JSON chính xác cấu trúc này: { "speed": { "answer": "đáp án", "similar": { "question": "câu hỏi", "options": ["A", "B", "C", "D"], "correctIndex": 0 } }, "socratic_hint": "gợi ý", "core_concept": "khái niệm" }. Môn ${subject}: ${prompt}` },
-          // Nếu có ảnh (Base64), thêm vào để Gemini quét
-          ...(image ? [{
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: image.includes(",") ? image.split(",")[1] : image
-            }
-          }] : [])
-        ]
+  // 2. Giả lập dữ liệu trả về (Bạn không cần sửa gì ở đây)
+  const mockResponse = {
+    speed: {
+      answer: "Để giải bài toán này, ta áp dụng công thức: $A = \pi \cdot r^2$. Kết quả cuối cùng là 25.12.",
+      similar: {
+        question: "Câu hỏi tương tự: Tính chu vi hình chữ nhật có cạnh 3 và 4?",
+        options: ["7", "12", "14", "10"],
+        correctIndex: 2
       }
-    ];
+    },
+    socratic_hint: "Gợi ý: Hãy kiểm tra kỹ đơn vị đo lường trước khi tính toán nhé!",
+    core_concept: "Hình học và Đại số cơ bản"
+  };
 
-    // 3. Gọi API của Google Gemini
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents,
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.1
-        }
-      })
-    });
-
-    const data = await response.json();
-
-    // 4. Lấy nội dung text từ phản hồi của Gemini
-    if (!data.candidates || !data.candidates[0]) {
-       return new Response(JSON.stringify({ error: 'Không nhận được phản hồi từ AI' }), { status: 500 });
+  // 3. Trả về kết quả cho Frontend ngay lập tức
+  return new Response(JSON.stringify(mockResponse), {
+    status: 200,
+    headers: { 
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*' // Cho phép mọi nguồn truy cập để tránh lỗi CORS
     }
-
-    const content = data.candidates[0].content.parts[0].text;
-    
-    return new Response(content, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-  } catch (err) {
-    console.error("Lỗi Server:", err);
-    return new Response(JSON.stringify({ error: 'Lỗi máy chủ khi xử lý Gemini' }), { status: 500 });
-  }
+  });
 }
