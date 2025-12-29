@@ -6,3 +6,4 @@
 body {
   @apply bg-[#f8fafc] text-slate-900;
 }
+@import 'katex/dist/katex.min.css';
